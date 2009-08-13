@@ -7,7 +7,7 @@ var people = [
 ];
 
 function on_change(id) {
-	node.debug(id, JSON.stringify(people(id)));
+	node.debug(id, JSON.stringify(people[id]));
 }
 
 function onLoad() {
