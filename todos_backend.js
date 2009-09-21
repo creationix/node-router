@@ -4,6 +4,8 @@
 // This provides the same REST style api as the merb example and even hosts
 // on port 4000. It's a drop in replacement for the sample merb backend.
 
+include('/file.js');
+
 var server = require('http_server.js');
 
 var tasks;
@@ -39,9 +41,9 @@ function apply_json_to_task(task, json_hash) {
 
 // Serialize the data to the disk
 function save_data() {
-  var fd = node.fs.open("tasks.db", node.O_WRONLY, 0666).wait();
-  node.fs.write(fd, JSON.stringify(tasks)).wait();
-  node.fs.close(fd).wait();
+  var file = new File("tasks.db", "w");
+  file.write(JSON.stringify(tasks));
+  file.close();
 }
 
 // Load the data from the disk
