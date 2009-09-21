@@ -13,10 +13,8 @@ the root, it will be put in place of hello world.
       res.simpleHtml(200, "Hello " + (match || "World") + "!");
     }
 
-    function onLoad() {
-    	server.get(new RegExp("^/(.*)$"), hello);
-    	server.listen(8080);
-    }
+    server.get(new RegExp("^/(.*)$"), hello);
+    server.listen(8080);
 
 ## RESTful Resources made easy
 
@@ -35,10 +33,8 @@ controller generator that makes building a simple in-memory data controller easy
     	node.debug(id, JSON.stringify(people[id]));
     }
 
-    function onLoad() {
-    	server.resource("people", server.resourceController("people", people), on_change);
-    	server.listen(8080);
-    }
+    server.resource("people", server.resourceController("people", people), on_change);
+    server.listen(8080);
 
 ## Backend for SproutCore Todos example application.
 
@@ -86,10 +82,9 @@ This is a node.js backend for the Todos example in the SproutCore documentation.
 
     // Serialize the data to the disk
     function save_data() {
-      var file = new node.fs.File();
-      file.open("tasks.db", "w");
-      file.write(JSON.stringify(tasks));
-      file.close();
+      var fd = node.fs.open("tasks.db", node.O_WRONLY, 0666).wait();
+      node.fs.write(fd, JSON.stringify(tasks)).wait();
+      node.fs.close(fd).wait();
     }
 
     // Load the data from the disk
@@ -158,23 +153,19 @@ This is a node.js backend for the Todos example in the SproutCore documentation.
     	}
     };
 
-    function onLoad() {
-	
-    	// Mount our controller as a RESTful resource
-    	server.resource('tasks', tasksController);
-	
-    	// Load the datastore
-    	puts("Loading data from file...");
-    	load_data(function (success) {
-    		// Kickoff the server
-    		if (success) {
-    			puts("Loaded");
-    		} else {
-    			puts("Error, creating empty tasks array");
-    			save_data();
-    		}
-    		// And start the server when done
-    		server.listen(4000);
-    	});
- 
-    }
+    // Mount our controller as a RESTful resource
+    server.resource('tasks', tasksController);
+
+    // Load the datastore
+    puts("Loading data from file...");
+    load_data(function (success) {
+    	// Kickoff the server
+    	if (success) {
+    		puts("Loaded");
+    	} else {
+    		puts("Error, creating empty tasks array");
+    		save_data();
+    	}
+    	// And start the server when done
+    	server.listen(4000);
+    });

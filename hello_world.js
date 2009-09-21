@@ -4,7 +4,5 @@ function hello(req, res, match) {
   res.simpleHtml(200, "Hello " + (match || "World") + "!");
 }
 
-function onLoad() {
-	server.get(new RegExp("^/(.*)$"), hello);
-	server.listen(8080);
-}
+server.get(new RegExp("^/(.*)$"), hello);
+server.listen(8080);

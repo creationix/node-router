@@ -39,10 +39,9 @@ function apply_json_to_task(task, json_hash) {
 
 // Serialize the data to the disk
 function save_data() {
-  var file = new node.fs.File();
-  file.open("tasks.db", "w");
-  file.write(JSON.stringify(tasks));
-  file.close();
+  var fd = node.fs.open("tasks.db", node.O_WRONLY, 0666).wait();
+  node.fs.write(fd, JSON.stringify(tasks)).wait();
+  node.fs.close(fd).wait();
 }
 
 // Load the data from the disk
@@ -111,23 +110,19 @@ var tasksController = {
 	}
 };
 
-function onLoad() {
-	
-	// Mount our controller as a RESTful resource
-	server.resource('tasks', tasksController);
-	
-	// Load the datastore
-	puts("Loading data from file...");
-	load_data(function (success) {
-		// Kickoff the server
-		if (success) {
-			puts("Loaded");
-		} else {
-			puts("Error, creating empty tasks array");
-			save_data();
-		}
-		// And start the server when done
-		server.listen(4000);
-	});
- 
-}
+// Mount our controller as a RESTful resource
+server.resource('tasks', tasksController);
+
+// Load the datastore
+puts("Loading data from file...");
+load_data(function (success) {
+	// Kickoff the server
+	if (success) {
+		puts("Loaded");
+	} else {
+		puts("Error, creating empty tasks array");
+		save_data();
+	}
+	// And start the server when done
+	server.listen(4000);
+});

@@ -10,7 +10,5 @@ function on_change(id) {
 	node.debug(id, JSON.stringify(people[id]));
 }
 
-function onLoad() {
-	server.resource("people", server.resourceController("people", people), on_change);
-	server.listen(8080);
-}
+server.resource("people", server.resourceController("people", people), on_change);
+server.listen(8080);
