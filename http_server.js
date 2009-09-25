@@ -31,7 +31,7 @@ exports.put = function (pattern, handler) {
   return addRoute("PUT", pattern, handler);
 };
 
-exports['delete'] = function (pattern, handler) {
+exports.del = function (pattern, handler) {
   return addRoute("DELETE", pattern, handler);
 };
 
@@ -40,7 +40,7 @@ exports.resource = function (name, controller) {
   exports.get(new RegExp('^/' + name + '/([^/]+)$'), controller.show);
   exports.post(new RegExp('^/' + name + '$'), controller.create);
   exports.put(new RegExp('^/' + name + '/([^/]+)$'), controller.update);
-  exports['delete'](new RegExp('^/' + name + '/([^/]+)$'), controller.destroy);
+  exports.del(new RegExp('^/' + name + '/([^/]+)$'), controller.destroy);
 };
 
 exports.resourceController = function (name, data, on_change) {
