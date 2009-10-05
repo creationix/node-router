@@ -1,45 +1,53 @@
+node.mixin(require('/utils.js'));
+var http = require('/http.js');
 
 var NOT_FOUND = "Not Found\n";
 
 function notFound(req, res, message) {
+  debug("notFound!");
+  message = message || NOT_FOUND;
   res.sendHeader(404, [ ["Content-Type", "text/plain"],
-                        ["Content-Length", NOT_FOUND.length]
+                        ["Content-Length", message.length]
                       ]);
-  res.sendBody(message || NOT_FOUND);
+  res.sendBody(message);
   res.finish();
 }
 
 var routes = [];
 
-function addRoute(method, pattern, handler) {
-  routes.push({
+function addRoute(method, pattern, handler, format) {
+	var route = {
     method: method,
     pattern: pattern,
     handler: handler
-  });
+  };
+	if (format !== undefined) {
+		route.format = format;
+	}
+  routes.push(route);
 }
 
 exports.get = function (pattern, handler) {
   return addRoute("GET", pattern, handler);
 };
 
-exports.post = function (pattern, handler) {
-  return addRoute("POST", pattern, handler);
+exports.post = function (pattern, handler, format) {
+  return addRoute("POST", pattern, handler, format);
 };
 
-exports.put = function (pattern, handler) {
-  return addRoute("PUT", pattern, handler);
+exports.put = function (pattern, handler, format) {
+  return addRoute("PUT", pattern, handler, format);
 };
 
 exports.del = function (pattern, handler) {
   return addRoute("DELETE", pattern, handler);
 };
 
-exports.resource = function (name, controller) {
+exports.resource = function (name, controller, format) {
   exports.get(new RegExp('^/' + name + '$'), controller.index);
   exports.get(new RegExp('^/' + name + '/([^/]+)$'), controller.show);
-  exports.post(new RegExp('^/' + name + '$'), controller.create);
-  exports.put(new RegExp('^/' + name + '/([^/]+)$'), controller.update);
+  exports.post(new RegExp('^/' + name + '$'), controller.create, format);
+  exports.put(new RegExp('^/' + name + '/([^/]+)$'), controller.update, format);
   exports.del(new RegExp('^/' + name + '/([^/]+)$'), controller.destroy);
 };
 
@@ -93,21 +101,18 @@ exports.resourceController = function (name, data, on_change) {
 	};
 };
 
-var server = node.http.createServer(function (req, res) {
+var server = http.createServer(function (req, res) {
   var path = req.uri.path;
   puts(req.method + " " + path);
 
-	// Load the request body and call callback when done
-	req.jsonBody = function (callback) {
-	  var body = "";
-	  req.setBodyEncoding('utf8');
-	  req.addListener('body', function (chunk) {
-	    body += chunk;
-	  });
-	  req.addListener('complete', function () {
-			callback(JSON.parse(body));
-	  });
-	};
+  res.simpleText = function (code, body, extra_headers) {
+    res.sendHeader(code, (extra_headers || []).concat(
+	                       [ ["Content-Type", "text/plain"],
+                           ["Content-Length", body.length]
+                         ]));
+    res.sendBody(body);
+    res.finish();
+  };
 
   res.simpleHtml = function (code, body, extra_headers) {
     res.sendHeader(code, (extra_headers || []).concat(
@@ -138,9 +143,25 @@ var server = node.http.createServer(function (req, res) {
       var match = path.match(route.pattern);
       if (match && match[0].length > 0) {
         match.shift();
+        match = match.map(unescape);
         match.unshift(res);
         match.unshift(req);
-        route.handler.apply(this, match);
+        if (route.format !== 'undefined') {
+          var body = "";
+      	  req.setBodyEncoding('utf8');
+      	  req.addListener('body', function (chunk) {
+      	    body += chunk;
+      	  });
+      	  req.addListener('complete', function () {
+      	    if (route.format === 'json') {
+      	      body = JSON.parse(body);
+      	    }
+      	    match.push(body);
+            route.handler.apply(null, match);
+      	  });
+      	  return;
+        } 
+        route.handler.apply(null, match);
         return;
       }
     }
@@ -165,7 +186,7 @@ function extname (path) {
 exports.staticHandler = function (req, res, filename) {
   var body, headers;
   var content_type = exports.mime.lookupExtension(extname(filename));
-  var encoding = (content_type.slice(0,4) === "text" ? "utf8" : "raw");
+  var encoding = (content_type.slice(0,4) === "text" ? "utf8" : "binary");
 
   function loadResponseData(callback) {
     if (body && headers) {
@@ -173,9 +194,7 @@ exports.staticHandler = function (req, res, filename) {
       return;
     }
 
-    var promise = node.fs.cat(filename, encoding);
-
-    promise.addCallback(function (data) {
+    node.fs.cat(filename, encoding).addCallback(function (data) {
       body = data;
       headers = [ [ "Content-Type"   , content_type ],
                   [ "Content-Length" , body.length ]
@@ -183,16 +202,14 @@ exports.staticHandler = function (req, res, filename) {
       headers.push(["Cache-Control", "public"]);
        
       callback();
-    });
-
-    promise.addErrback(function () {
-      notFound(req, res);
+    }).addErrback(function () {
+      notFound(req, res, "Cannot find file: " + filename);
     });
   }
 
   loadResponseData(function () {
     res.sendHeader(200, headers);
-    res.sendBody(body);
+    res.sendBody(body, encoding);
     res.finish();
   });
 };
@@ -340,6 +357,7 @@ exports.mime = {
 						".t"     : "text/troff",
 						".tar"   : "application/x-tar",
 						".tbz"   : "application/x-bzip-compressed-tar",
+						".tci"   : "application/x-topcloud",
 						".tcl"   : "application/x-tcl",
 						".tex"   : "application/x-tex",
 						".texi"  : "application/x-texinfo",
