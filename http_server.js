@@ -1,5 +1,5 @@
-node.mixin(require('/utils.js'));
-var http = require('/http.js');
+process.mixin(require('sys'));
+var http = require('http')
 
 var NOT_FOUND = "Not Found\n";
 
@@ -194,7 +194,7 @@ exports.staticHandler = function (req, res, filename) {
       return;
     }
 
-    node.fs.cat(filename, encoding).addCallback(function (data) {
+    process.fs.cat(filename, encoding).addCallback(function (data) {
       body = data;
       headers = [ [ "Content-Type"   , content_type ],
                   [ "Content-Length" , body.length ]

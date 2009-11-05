@@ -1,4 +1,4 @@
-var server = require('http_server.js');
+var server = require('./http_server')
 
 var people = [
 	{ name: "Bob", age: 47, programmer: false },
@@ -7,7 +7,7 @@ var people = [
 ];
 
 function on_change(id) {
-	node.debug(id, JSON.stringify(people[id]));
+	process.debug(id, JSON.stringify(people[id]));
 }
 
 server.resource("people", server.resourceController("people", people), on_change);

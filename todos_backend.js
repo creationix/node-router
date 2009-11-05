@@ -4,9 +4,9 @@
 // This provides the same REST style api as the merb example and even hosts
 // on port 4000. It's a drop in replacement for the sample merb backend.
 
-include('/file.js');
+include('/file');
 
-var server = require('http_server.js');
+var server = require('./http_server')
 
 var tasks;
 
@@ -49,7 +49,7 @@ function save_data() {
 // Load the data from the disk
 function load_data(callback) {
 	// Load the database from disk
-	var promise = node.fs.cat("tasks.db", "utf8");
+	var promise = process.fs.cat("tasks.db", "utf8");
 	promise.addCallback(function (json) {
 		tasks = JSON.parse(json);
 		callback(true);
