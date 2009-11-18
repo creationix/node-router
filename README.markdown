@@ -2,12 +2,27 @@
 
 Node-router is a small simple node.js http server that makes building simple webservices super simple.
 
+## Node libraries
+
+There are two ways to include this library in your node project.  You can either copy the node-router.js file in 
+the same directory as your script and require it with a relative path:
+
+    var server = require('./node-router');
+  
+Or you can copy `node-router.js` to somewhere in your `require.paths` array. Then you can use a global require
+like:
+
+    var server = require('node-router');
+    
+See the [node docs][http://nodejs.org/api.html#_modules] for more details.
+
+
 ## Hello World example
 
 This example has a single get route that returns the string hello world.  If there is path after
 the root, it will be put in place of hello world.
 
-    var server = require('http_server.js');
+    var server = require('node-router');
 
     function hello(req, res, match) {
       res.simpleHtml(200, "Hello " + (match || "World") + "!");
@@ -21,7 +36,7 @@ the root, it will be put in place of hello world.
 server.resource maps a group of the common routes for a RESTful resource.  There is also a 
 controller generator that makes building a simple in-memory data controller easy.
 
-    var server = require('http_server.js');
+    var server = require('node-router');
 
     var people = [
     	{ name: "Bob", age: 47, programmer: false },
@@ -47,7 +62,7 @@ This is a node.js backend for the Todos example in the SproutCore documentation.
     // This provides the same REST style api as the merb example and even hosts
     // on port 4000. It's a drop in replacement for the sample merb backend.
 
-    var server = require('http_server.js');
+    var server = require('node-router');
 
     var tasks;
 

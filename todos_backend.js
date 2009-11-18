@@ -4,9 +4,9 @@
 // This provides the same REST style api as the merb example and even hosts
 // on port 4000. It's a drop in replacement for the sample merb backend.
 
-include('/file');
+include('file');
 
-var server = require('./http_server')
+var server = require('./node-router')
 
 var tasks;
 

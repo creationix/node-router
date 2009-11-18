@@ -1,7 +1,7 @@
-process.mixin(require('sys'));
+var sys = require('sys');
 var http = require('http')
-
 var NOT_FOUND = "Not Found\n";
+var routes = [];
 
 function notFound(req, res, message) {
   debug("notFound!");
@@ -12,8 +12,6 @@ function notFound(req, res, message) {
   res.sendBody(message);
   res.finish();
 }
-
-var routes = [];
 
 function addRoute(method, pattern, handler, format) {
 	var route = {
@@ -103,7 +101,7 @@ exports.resourceController = function (name, data, on_change) {
 
 var server = http.createServer(function (req, res) {
   var path = req.uri.path;
-  puts(req.method + " " + path);
+  sys.puts(req.method + " " + path);
 
   res.simpleText = function (code, body, extra_headers) {
     res.sendHeader(code, (extra_headers || []).concat(
@@ -173,7 +171,7 @@ var server = http.createServer(function (req, res) {
 
 exports.listen = function (port, host) {
   server.listen(port, host);
-  puts("Server at http://" + (host || "127.0.0.1") + ":" + port.toString() + "/");
+  sys.puts("Server at http://" + (host || "127.0.0.1") + ":" + port.toString() + "/");
 };
 
 exports.close = function () { server.close(); };

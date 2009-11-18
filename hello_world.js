@@ -1,4 +1,4 @@
-var server = require('./http_server')
+var server = require('./node-router')
 
 function hello(req, res, match) {
   res.simpleHtml(200, "Hello " + (match || "World") + "!");
