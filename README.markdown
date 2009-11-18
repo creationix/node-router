@@ -14,8 +14,9 @@ like:
 
     var server = require('node-router');
     
-See the [node docs][http://nodejs.org/api.html#_modules] for more details.
+See the [node docs][] for more details.
 
+[node docs]: http://nodejs.org/api.html#_modules
 
 ## Hello World example
 
