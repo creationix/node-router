@@ -1,6 +1,6 @@
 # node-router
 
-Node-router is a small simple node.js http server that makes building simple webservices super simple.
+Node-router is a small simple node.js http server that makes building simple web-services super simple.
 
 ## Node libraries
 
