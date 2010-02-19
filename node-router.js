@@ -1,5 +1,5 @@
 var sys = require('sys');
-var posix = require('posix');
+var fs = require('fs');
 var http = require('http');
 var url_parse = require("url").parse;
 var NOT_FOUND = "Not Found\n";
@@ -11,8 +11,8 @@ function notFound(req, res, message) {
   res.sendHeader(404, [ ["Content-Type", "text/plain"],
                         ["Content-Length", message.length]
                       ]);
-  res.sendBody(message);
-  res.finish();
+  res.write(message);
+  res.close();
 }
 
 function addRoute(method, pattern, handler, format) {
@@ -111,8 +111,8 @@ var server = http.createServer(function (req, res) {
 	                       [ ["Content-Type", "text/plain"],
                            ["Content-Length", body.length]
                          ]));
-    res.sendBody(body);
-    res.finish();
+    res.write(body);
+    res.close();
   };
 
   res.simpleHtml = function (code, body, extra_headers) {
@@ -120,8 +120,8 @@ var server = http.createServer(function (req, res) {
 	                       [ ["Content-Type", "text/html"],
                            ["Content-Length", body.length]
                          ]));
-    res.sendBody(body);
-    res.finish();
+    res.write(body);
+    res.close();
   };
 
   res.simpleJson = function (code, json, extra_headers) {
@@ -130,8 +130,8 @@ var server = http.createServer(function (req, res) {
 	                       [ ["Content-Type", "application/json"],
                            ["Content-Length", body.length]
                          ]));
-    res.sendBody(body);
-    res.finish();
+    res.write(body);
+    res.close();
   };
 
   res.notFound = function (message) {
@@ -150,10 +150,10 @@ var server = http.createServer(function (req, res) {
         if (route.format !== 'undefined') {
           var body = "";
       	  req.setBodyEncoding('utf8');
-      	  req.addListener('body', function (chunk) {
+      	  req.addListener('data', function (chunk) {
       	    body += chunk;
       	  });
-      	  req.addListener('complete', function () {
+      	  req.addListener('end', function () {
       	    if (route.format === 'json') {
       	      body = JSON.parse(body);
       	    }
@@ -195,7 +195,7 @@ exports.staticHandler = function (req, res, filename) {
       return;
     }
 
-    posix.cat(filename, encoding).addCallback(function (data) {
+    fs.readFile(filename, encoding).addCallback(function (data) {
       body = data;
       headers = [ [ "Content-Type"   , content_type ],
                   [ "Content-Length" , body.length ]
@@ -210,8 +210,8 @@ exports.staticHandler = function (req, res, filename) {
 
   loadResponseData(function () {
     res.sendHeader(200, headers);
-    res.sendBody(body, encoding);
-    res.finish();
+    res.write(body, encoding);
+    res.close();
   });
 };
 
