@@ -195,7 +195,11 @@ exports.staticHandler = function (req, res, filename) {
       return;
     }
 
-    fs.readFile(filename, encoding).addCallback(function (data) {
+    fs.readFile(filename, encoding, function (err, data) {
+      if (err) {
+        notFound(req, res, "Cannot find file: " + filename);
+        return;
+      }
       body = data;
       headers = [ [ "Content-Type"   , content_type ],
                   [ "Content-Length" , body.length ]
@@ -203,8 +207,6 @@ exports.staticHandler = function (req, res, filename) {
       headers.push(["Cache-Control", "public"]);
 
       callback();
-    }).addErrback(function () {
-      notFound(req, res, "Cannot find file: " + filename);
     });
   }
 
