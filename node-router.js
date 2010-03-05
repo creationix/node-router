@@ -147,7 +147,7 @@ var server = http.createServer(function (req, res) {
         match = match.map(unescape);
         match.unshift(res);
         match.unshift(req);
-        if (route.format !== 'undefined') {
+        if (route.format !== undefined) {
           var body = "";
       	  req.setBodyEncoding('utf8');
       	  req.addListener('data', function (chunk) {
@@ -155,7 +155,7 @@ var server = http.createServer(function (req, res) {
       	  });
       	  req.addListener('end', function () {
       	    if (route.format === 'json') {
-      	      body = JSON.parse(body);
+      	      body = JSON.parse(unescape(body));
       	    }
       	    match.push(body);
             route.handler.apply(null, match);
@@ -184,12 +184,12 @@ function extname (path) {
   return index < 0 ? "" : path.substring(index);
 }
 
-exports.staticHandler = function (req, res, filename) {
+exports.staticHandler = function (filename) {
   var body, headers;
   var content_type = exports.mime.lookupExtension(extname(filename));
   var encoding = (content_type.slice(0,4) === "text" ? "utf8" : "binary");
 
-  function loadResponseData(callback) {
+  function loadResponseData(req, res, callback) {
     if (body && headers) {
       callback();
       return;
@@ -210,11 +210,45 @@ exports.staticHandler = function (req, res, filename) {
     });
   }
 
-  loadResponseData(function () {
-    res.sendHeader(200, headers);
-    res.write(body, encoding);
-    res.close();
-  });
+  return function (req, res) {
+		loadResponseData(req, res, function () {
+			res.sendHeader(200, headers);
+			res.write(body, encoding);
+			res.close();
+		});
+	};
+};
+
+exports.staticDirHandler = function(root) {
+  function loadResponseData(req, res, filename, callback) {
+		var content_type = exports.mime.lookupExtension(extname(filename));
+		var encoding = (content_type.slice(0,4) === "text" ? "utf8" : "binary");
+
+    fs.readFile(filename, encoding, function(err, data) {
+      if(err) {
+        notFound(req, res, "Cannot find file: " + filename);
+        return;
+      }
+    	var headers = [ [ "Content-Type"   , content_type ],
+                      [ "Content-Length" , data.length ],
+			                [ "Cache-Control"  , "public" ]
+                    ];
+      callback(headers, data, encoding);
+    });
+  }
+
+  return function (req, res) {
+		// trim off any query/anchor stuff, and lose the leading slash
+		var filename = req.url.replace(/\?.*$/g, '').replace(/#$/g, '').substring(1);
+		// make sure nobody can explore our local filesystem
+		filename = root + filename.replace(/\.\./g, '.');
+		if(filename == root) filename = root + 'index.html';
+		loadResponseData(req, res, filename, function(headers, body, encoding) {
+			res.sendHeader(200, headers);
+			res.write(body, encoding);
+			res.close();
+		});
+	};
 };
 
 // stolen from jack- thanks
