@@ -1,8 +1,7 @@
-var server = require('./node-router')
+var server = require('./lib/node-router').getServer();
 
-function hello(req, res, match) {
+server.get(new RegExp("^/(.*)$"), function hello(req, res, match) {
   res.simpleHtml(200, "Hello " + (match || "World") + "!");
-}
+});
 
-server.get(new RegExp("^/(.*)$"), hello);
 server.listen(8080);
