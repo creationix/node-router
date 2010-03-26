@@ -1,5 +1,5 @@
 { "name" : "node-router"
-, "version" : "0.0.1"
+, "version" : "0.0.2"
 , "description" : "A simple http server for node.js that has sinatra like qualities.  Ideal for generating web services via node."
 , "author" : "Tim Caswell <tim@creationix.org>"
 , "main" : "lib/node-router"
